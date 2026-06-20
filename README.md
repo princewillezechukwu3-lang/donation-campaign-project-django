@@ -1,4 +1,3 @@
-```markdown
 # Donation Campaign Backend API (Django Edition)
 
 A robust Crowdfunding API built using Python, Django, and Django REST Framework (DRF), backed by a PostgreSQL database instance.
@@ -17,9 +16,7 @@ This version utilizes Django's built-in Object-Relational Mapper (ORM) to handle
 Clone this repository to your local architecture, then install the required core packages via the Python package manager manifest:
 ```bash
 pip install -r requirements.txt
-
 ```
-
 ### 2. Environmental Configuration
 
 Create a `.env` file in the root directory of the project and populate it with your local PostgreSQL environment variables:
