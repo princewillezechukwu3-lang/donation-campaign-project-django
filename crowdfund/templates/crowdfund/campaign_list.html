@@ -1,0 +1,50 @@
+{% extends "crowdfund/base.html" %}
+{% load humanize %}
+
+{% block title %}Campaigns — GiveNaija{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Active Campaigns</h1>
+    <p class="muted">Support a cause you care about.</p>
+</section>
+
+{% if campaigns %}
+<div class="grid">
+    {% for campaign in campaigns %}
+    <article class="card">
+        <div class="card-body">
+            <h2 class="card-title">
+                <a href="{% url 'campaign_detail' campaign.id %}">{{ campaign.title }}</a>
+            </h2>
+            <p class="card-desc">{{ campaign.description|truncatewords:18 }}</p>
+
+            <div class="progress">
+                <div class="progress-bar" style="width: {{ campaign.progress }}%;"></div>
+            </div>
+            <div class="stats">
+                <span><strong>₦{{ campaign.raised|floatformat:0|intcomma }}</strong> raised</span>
+                <span class="muted">of ₦{{ campaign.goal_amount|floatformat:0|intcomma }}</span>
+            </div>
+            <div class="stats">
+                <span>{{ campaign.progress }}% funded</span>
+                <span class="muted">{{ campaign.donor_count }} donor{{ campaign.donor_count|pluralize }}</span>
+            </div>
+        </div>
+        <div class="card-foot">
+            {% if campaign.ended %}
+                <span class="badge badge-ended">Campaign ended</span>
+            {% else %}
+                <a class="btn btn-primary" href="{% url 'donate' campaign.id %}">Donate</a>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+    <p>No campaigns yet.</p>
+    <p class="muted">Add some in the <a href="/admin/">Django admin</a> to get started.</p>
+</div>
+{% endif %}
+{% endblock %}

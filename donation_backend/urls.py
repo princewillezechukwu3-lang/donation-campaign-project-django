@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),          # Django Admin panel
-    path('api/', include('crowdfund.urls')),  # Your complete API routing system
+    path('admin/', admin.site.urls),               # Django Admin panel
+    path('api/', include('crowdfund.urls')),       # Your complete API routing system
+    path('', include('crowdfund.web_urls')),       # Server-rendered frontend pages
 ]

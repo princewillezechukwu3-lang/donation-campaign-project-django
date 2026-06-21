@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',  # Number formatting (intcomma) for templates
     'rest_framework',   # Django REST Framework engine
     'crowdfund',
 ]

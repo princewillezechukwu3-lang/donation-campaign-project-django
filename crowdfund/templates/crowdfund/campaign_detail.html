@@ -1,0 +1,53 @@
+{% extends "crowdfund/base.html" %}
+{% load humanize %}
+
+{% block title %}{{ campaign.title }} — GiveNaija{% endblock %}
+
+{% block content %}
+<a class="back-link" href="{% url 'campaign_list' %}">&larr; All campaigns</a>
+
+<article class="detail">
+    <div class="detail-hero">{{ campaign.title|first|upper }}</div>
+
+    <h1>{{ campaign.title }}</h1>
+
+    {% if campaign.ended %}
+        <p class="badge badge-ended">Campaign ended</p>
+    {% endif %}
+
+    <p class="detail-desc">{{ campaign.description }}</p>
+
+    <div class="progress progress-lg">
+        <div class="progress-bar" style="width: {{ campaign.progress }}%;"></div>
+    </div>
+
+    <div class="detail-stats">
+        <div class="stat">
+            <span class="stat-value">₦{{ campaign.raised|floatformat:0|intcomma }}</span>
+            <span class="stat-label">Raised</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">₦{{ campaign.goal_amount|floatformat:0|intcomma }}</span>
+            <span class="stat-label">Goal</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ campaign.donor_count }}</span>
+            <span class="stat-label">Donor{{ campaign.donor_count|pluralize }}</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ campaign.progress }}%</span>
+            <span class="stat-label">Funded</span>
+        </div>
+    </div>
+
+    <div class="detail-action">
+        {% if campaign.ended %}
+            <button class="btn btn-primary" disabled>Campaign ended</button>
+            <p class="muted">This campaign is closed and no longer accepting donations.</p>
+        {% else %}
+            <a class="btn btn-primary btn-lg" href="{% url 'donate' campaign.id %}">Donate now</a>
+            <p class="muted">Minimum donation: ₦{{ campaign.minimum_donation|floatformat:0|intcomma }}</p>
+        {% endif %}
+    </div>
+</article>
+{% endblock %}
