@@ -1,0 +1,147 @@
+{% extends "crowdfund/base.html" %}
+{% load humanize %}
+
+{% block title %}Donate to {{ campaign.title }} — GiveNaija{% endblock %}
+
+{% block content %}
+<a class="back-link" href="{% url 'campaign_detail' campaign.id %}">&larr; Back to campaign</a>
+
+<div class="donate-wrap">
+    <h1>Donate to {{ campaign.title }}</h1>
+    <p class="muted">Minimum donation: ₦{{ campaign.minimum_donation|floatformat:0|intcomma }}</p>
+
+    {% if campaign.ended %}
+        <div class="alert alert-error">This campaign has ended and is no longer accepting donations.</div>
+        <a class="btn" href="{% url 'campaign_detail' campaign.id %}">View campaign</a>
+    {% else %}
+    <form id="donate-form" class="form"
+          data-campaign="{{ campaign.id }}"
+          data-min="{{ campaign.minimum_donation }}">
+        {% csrf_token %}
+
+        <div id="form-error" class="alert alert-error" hidden></div>
+        <div id="form-success" class="alert alert-success" hidden></div>
+
+        <label class="field">
+            <span>Donation amount (₦)</span>
+            <input type="number" name="amount" id="amount" min="0" step="any"
+                   value="{{ campaign.minimum_donation|floatformat:0 }}" required>
+        </label>
+
+        <label class="field">
+            <span>Full name</span>
+            <input type="text" name="donor_name" id="donor_name" placeholder="Jane Doe" required>
+        </label>
+
+        <label class="field">
+            <span>Email</span>
+            <input type="email" name="donor_email" id="donor_email" placeholder="jane@example.com" required>
+        </label>
+
+        <label class="field">
+            <span>Payment method</span>
+            <select name="payment_method" id="payment_method">
+                <option value="card">Card</option>
+                <option value="bank_transfer">Bank transfer</option>
+                <option value="ussd">USSD</option>
+            </select>
+        </label>
+
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-lg">Donate ₦0</button>
+    </form>
+    {% endif %}
+</div>
+
+<script>
+(function () {
+    var form = document.getElementById('donate-form');
+    if (!form) return;
+
+    var amount = document.getElementById('amount');
+    var submitBtn = document.getElementById('submit-btn');
+    var errorBox = document.getElementById('form-error');
+    var successBox = document.getElementById('form-success');
+
+    var campaignId = parseInt(form.dataset.campaign, 10);
+    var minimum = parseFloat(form.dataset.min);
+
+    function naira(n) {
+        return '₦' + (Number(n) || 0).toLocaleString('en-NG');
+    }
+    function updateButton() {
+        submitBtn.textContent = 'Donate ' + naira(amount.value);
+    }
+    amount.addEventListener('input', updateButton);
+    updateButton();
+
+    function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.hidden = false;
+        successBox.hidden = true;
+    }
+
+    function getCsrf() {
+        var el = form.querySelector('[name=csrfmiddlewaretoken]');
+        return el ? el.value : '';
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        errorBox.hidden = true;
+        successBox.hidden = true;
+
+        var value = parseFloat(amount.value);
+
+        // Client-side guard for instant feedback (the API enforces this too).
+        if (isNaN(value) || value <= 0) {
+            showError('Please enter a valid donation amount.');
+            return;
+        }
+        if (value < minimum) {
+            showError('Minimum donation amount for this campaign is ' + naira(minimum) + '.');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing…';
+
+        fetch('/api/donations/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrf()
+            },
+            body: JSON.stringify({
+                campaign: campaignId,
+                amount: value,
+                donor_name: document.getElementById('donor_name').value,
+                donor_email: document.getElementById('donor_email').value
+            })
+        })
+        .then(function (res) {
+            return res.json().then(function (data) {
+                return { ok: res.ok, data: data };
+            });
+        })
+        .then(function (result) {
+            submitBtn.disabled = false;
+            updateButton();
+            if (result.ok) {
+                form.reset();
+                successBox.textContent = 'Thank you! Your donation of ' + naira(value) + ' was received.';
+                successBox.hidden = false;
+            } else {
+                var d = result.data || {};
+                var msg = d.error || (d.amount && d.amount[0]) || 'Could not process your donation. Please check your details.';
+                showError(msg);
+            }
+        })
+        .catch(function () {
+            submitBtn.disabled = false;
+            updateButton();
+            showError('Network error — please try again.');
+        });
+    });
+})();
+</script>
+{% endblock %}
